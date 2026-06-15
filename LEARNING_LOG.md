@@ -1,3 +1,31 @@
+SESSION SUMMARY — 15.06.2026 (продолжение)
+Закрыто:
+utils layer: generate_booking_payload() с Faker — firstname, lastname, totalprice, additionalneeds рандомные; даты через date_between с инвариантом checkout > checkin через timedelta; Faker() инициализируется на уровне модуля (не внутри функции) — один объект на всю сессию вместо N; strftime("%Y-%m-%d") для конвертации date → строку.
+test_delete_booking переписан без fixture booking — тест сам создаёт бронирование и удаляет, fixture больше не дублирует DELETE.
+requirements.txt обновлён через pip freeze.
+
+Ошибки и root cause:
+Запятая после fake.date_between(...), — checkin стал кортежем вместо date. Root cause: невнимательность к синтаксису Python, где trailing comma создаёт tuple.
+response = booking_id в fixture — попытка сохранить DELETE response до того, как DELETE был вызван. Root cause: непонимание порядка выполнения fixture (setup → yield → тест → teardown). DELETE response недоступен в yield, потому что происходит после теста.
+
+Следующий шаг: новые тесты — GET, PUT/PATCH эндпоинты
+
+---
+
+SESSION SUMMARY — 15.06.2026
+Закрыто:
+fixtures layer: auth_token (scope=session — один токен на всю сессию), booking (yield + teardown: create_booking → yield id → delete_booking в cleanup)
+первые тесты внутри framework: test_auth_token (Pydantic-валидация Auth модели), test_delete_booking (DELETE-эндпоинт)
+models layer: закрыт (Auth, Booking, BookingDates nested model)
+
+Ошибки и root cause:
+test_delete_booking вызывает client.delete_booking вручную — но booking-fixture уже делает delete в teardown. В итоге DELETE летит дважды: тест удаляет бронирование, потом fixture пытается удалить уже несуществующий ресурс. Root cause: не увидел, что fixture — это не только setup, но и cleanup. Правило: если fixture делает teardown, тест не должен дублировать это действие.
+В test_auth.py висят мёртвые импорты (import requests, from config import BASE_URL) — код не используется. Root cause: копипаст без чистки. В production это замусоривает namespace и вводит в заблуждение читателя.
+
+Следующий шаг: utils layer
+
+---
+
 SESSION SUMMARY — 12.06.2026
 Закрыто:
 

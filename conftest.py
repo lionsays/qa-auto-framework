@@ -1,6 +1,7 @@
 import pytest
 from config import USERNAME, PASSWORD
 from clients import BookingClient
+from utils import generate_booking_payload
 
 
 @pytest.fixture(scope="session")
@@ -17,19 +18,9 @@ def auth_token():
 @pytest.fixture
 def booking(auth_token):
     client = BookingClient()
-    data = {
-    "firstname": "Jim",
-    "lastname": "Brown",
-    "totalprice": 100,
-    "depositpaid": True,
-    "bookingdates": {
-        "checkin": "2025-01-01",
-        "checkout": "2025-01-10"
-        },
-    "additionalneeds": "Breakfast"
-    }
+    data = generate_booking_payload()
     booking_id = client.create_booking(data)
-    yield booking_id
+    yield booking_id 
     client.delete_booking(booking_id, auth_token)
 
     
