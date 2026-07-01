@@ -2,7 +2,7 @@ from utils import generate_booking_payload
 from models import Auth, Booking
 from clients import BookingClient
 from datetime import date
-
+import pytest
 
 
 def test_auth_token(auth_token):
@@ -17,6 +17,7 @@ def test_delete_booking(auth_token):
     booking_del = client.delete_booking(booking_id, auth_token)
     assert booking_del.status_code == 201
 
+
 def test_get_booking(booking):
     client = BookingClient()
     booking_id, expected = booking
@@ -29,34 +30,38 @@ def test_get_booking(booking):
 
     assert actual == expected
 
-def test_patch_booking(booking, auth_token):
+
+@pytest.mark.parametrize("field, value", [
+    ("firstname", "Alice"),
+    ("lastname", "Morgan"),
+    ("totalprice", 999)
+])
+def test_patch_booking(booking, auth_token, field, value):
     client = BookingClient()
     booking_id, before = booking
-    patch = {"lastname": "Morgan"}
-
+    patch = {field: value}
     resp = client.patch_booking(booking_id, patch, auth_token)
+    
     assert resp.status_code == 200
+    
     get_resp = client.get_booking(booking_id)
     after = Booking(**get_resp.json())
-    
+    actual = after.model_dump(mode="json")
 
-    assert after.lastname == "Morgan"
-    assert after.firstname == before["firstname"]
-    assert after.totalprice == before["totalprice"]
-    assert after.depositpaid == before["depositpaid"]
-    assert after.lastname != before["lastname"]
-    assert after.bookingdates.checkin == date.fromisoformat(before["bookingdates"]["checkin"])
-    assert after.bookingdates.checkout == date.fromisoformat(before["bookingdates"]["checkout"])
+    assert actual[field] == value
+    for key in before:
+        if key != field:
+            assert actual[key] == before[key]
 
 
 def test_put_booking(booking, auth_token):
     client = BookingClient()
-    booking_id, before = booking
+    booking_id, _ = booking
     new_payload = generate_booking_payload()
     response = client.put_booking(booking_id, new_payload, auth_token)
     
     assert response.status_code == 200
-
+    
     get_resp = client.get_booking(booking_id)
     after = Booking(**get_resp.json())
     after_dict = after.model_dump(mode="json")

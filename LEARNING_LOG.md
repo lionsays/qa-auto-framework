@@ -14,6 +14,38 @@
 
 ## История сессий
 
+### 2026-07-01 — pre-commit code review, PEP8, AAA-паттерн
+**Тема:** визуальный стиль кода, PEP8, AAA-паттерн в тестах
+
+- Pre-commit review: 5/5 тестов зелёные, проект готов к коммиту
+- PEP8: два разрыва перед top-level функцией, два разрыва между функциями в тест-файле
+- Отступы в dict: содержимое словаря на один уровень глубже открывающей скобки (8 пробелов внутри функции)
+- AAA-паттерн: пустая строка разделяет фазы (Arrange / Act / Assert), не отдельные строки внутри фазы; между assert-ами пустых строк нет
+- Мёртвая переменная: `before` в `test_put_booking` заменена на `_`, т.к. не использовалась
+
+**Ошибки:**
+- Trailing whitespace после `:` в def — не виден глазом, но ловится линтером и git diff
+- Отступ `"additionalneeds"` выровнен по закрывающей `}` вложенного dict вместо уровня родительского dict — перепутаны уровни вложенности
+- Три пустые строки после импортов вместо двух — не замечено до ревью
+
+**Следующий шаг:** параметризация — `@pytest.mark.parametrize` для PATCH/PUT
+
+---
+
+### 2026-07-01 — PATCH/PUT закрыты, 5 тестов зелёные
+**Тема:** finalize test_patch_booking, test_put_booking, mutation check
+
+- `models/__init__.py` — добавлен импорт `Booking`, `BookingDates`
+- `patch_booking` и `put_booking` добавлены в `BookingClient`: Cookie-авторизация, `json=payload`, возвращают `Response`
+- `test_patch_booking`: антизатирание — патчим `lastname`, проверяем изменение + все остальные поля не затёрты, даты через `date.fromisoformat()`
+- `test_put_booking`: полная замена ресурса — `new_payload` через `generate_booking_payload()`, сравнение `after.model_dump(mode="json") == new_payload`
+- Mutation check для обоих тестов пройден; все 5 тестов зелёные
+
+**Следующий шаг:** параметризация — `@pytest.mark.parametrize` для PATCH/PUT с несколькими полями и значениями
+
+---
+
+
 ### 2026-06-24 — PATCH закрыт, PUT в работе
 **Тема:** финализация test_patch_booking, разбор test suite, следующий шаг — PUT
 
