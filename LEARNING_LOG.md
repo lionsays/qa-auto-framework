@@ -14,6 +14,27 @@
 
 ## История сессий
 
+### 2026-07-01 — parametrize для PATCH, getattr, model_dump
+**Тема:** @pytest.mark.parametrize, getattr, тип переменной в тесте
+
+- `@pytest.mark.parametrize("field, value", [...])` — два параметра через строку, список кортежей; каждый кейс отдельный узел в отчёте
+- `patch = {field: value}` — словарь собирается динамически из параметров
+- `getattr(model, key)` — доступ к полю Pydantic-модели по имени-строке; на dict не работает, там `dict[key]`
+- `actual = after.model_dump(mode="json")` — превращает модель в dict со строками; решает проблему сравнения `BookingDates` (модель) vs `before["bookingdates"]` (dict)
+- Антизатирание через цикл: `for key in before: if key != field: assert actual[key] == before[key]`
+- `pytest -s` отключает захват stdout — позволяет видеть `print()` в тестах
+- 7/7 тестов зелёные
+
+**Ошибки:**
+- `before.model_dump()` — `before` это dict, у него нет этого метода; `model_dump` только у Pydantic-модели
+- `getattr(actual, field)` после дампа — перепутал тип: `actual` уже dict, не модель
+- `assert actual == value` — сравнивал весь словарь с одним значением вместо `actual[field] == value`
+- Root cause всех трёх: не отслеживал тип переменной (`before` — dict, `after` — модель, `actual` — dict после дампа)
+
+**Следующий шаг:** параметризация `test_put_booking` или новая тема
+
+---
+
 ### 2026-07-01 — pre-commit code review, PEP8, AAA-паттерн
 **Тема:** визуальный стиль кода, PEP8, AAA-паттерн в тестах
 
