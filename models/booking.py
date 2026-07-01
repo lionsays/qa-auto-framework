@@ -1,8 +1,9 @@
 from pydantic import BaseModel
+from datetime import date
 
 class BookingDates(BaseModel):
-    checkin: str
-    checkout: str
+    checkin: date
+    checkout: date
 
 class Booking(BaseModel):
     firstname: str

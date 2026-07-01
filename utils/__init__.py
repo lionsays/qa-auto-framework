@@ -1,5 +1,5 @@
 from faker import Faker
-from datetime import timedelta
+from datetime import timedelta, date
 
 fake = Faker()
 
@@ -20,3 +20,4 @@ def generate_booking_payload():
     }
     
     return booking_data
+    

@@ -20,7 +20,7 @@ def booking(auth_token):
     client = BookingClient()
     data = generate_booking_payload()
     booking_id = client.create_booking(data)
-    yield booking_id 
+    yield booking_id, data
     client.delete_booking(booking_id, auth_token)
 
     
